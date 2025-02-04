@@ -1,0 +1,43 @@
+	resp := make(map[string]interface{})
+	ctx := r.Context()
+	in := {{.InType}}{}
+
+	err := in.Decode(r.URL.Query())
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		resp["error"] = err.Error()
+		jsonStr, err := json.Marshal(resp)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		fmt.Fprintf(w, string(jsonStr))
+		return
+	}
+
+	out := new({{.OutType}})
+	out, err = srv.{{.MethodName}}(ctx, in)
+	if err != nil {
+		if err, ok := err.(ApiError); ok {
+			w.WriteHeader(err.HTTPStatus)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		resp["error"] = err.Error()
+		jsonStr, err := json.Marshal(resp)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			resp["error"] = "internal server error"
+		}
+		fmt.Fprintf(w, string(jsonStr))
+		return
+	}
+	resp["error"] = ""
+	resp["response"] = out
+	w.WriteHeader(http.StatusOK)
+	jsonStr, err := json.Marshal(resp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		resp["error"] = "internal server error"
+	}
+	fmt.Fprintf(w, string(jsonStr))
+}

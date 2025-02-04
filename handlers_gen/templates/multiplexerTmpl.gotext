@@ -1,0 +1,58 @@
+	resp := make(map[string]interface{})
+	switch r.URL.Path { {{ range . }}
+    case "{{.URL}}":{{ if or (eq .MethodType "") (eq .MethodType "GET") }}
+		if r.Method == http.MethodPost {
+			bs, err := io.ReadAll(r.Body)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				resp["error"] = "internal server error"
+				jsonStr, _ := json.Marshal(resp)
+				fmt.Fprintf(w, string(jsonStr))
+				return
+			}
+			r.URL.RawQuery = string(bs)
+		}{{ end }}{{ if eq .MethodType "POST" }}
+		if r.Method != http.MethodPost {
+			resp["error"] = "bad method"
+			w.WriteHeader(http.StatusNotAcceptable)
+			jsonStr, err := json.Marshal(resp)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				resp["error"] = "internal server error"
+				jsonStr, _ := json.Marshal(resp)
+				fmt.Fprintf(w, string(jsonStr))
+				return
+			}
+			fmt.Fprintf(w, string(jsonStr))
+			return
+		}{{ end }}{{ if .Auth }}
+		if r.Header.Get("X-Auth") != "100500" {
+			resp["error"] = "unauthorized"
+			w.WriteHeader(http.StatusForbidden)
+			jsonStr, err := json.Marshal(resp)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				resp["error"] = "internal server error"
+				jsonStr, _ := json.Marshal(resp)
+				fmt.Fprintf(w, string(jsonStr))
+				return
+			}
+			fmt.Fprintf(w, string(jsonStr))
+			return
+		}{{ end }}
+		srv.handler{{.MethodName}}(w, r){{ end }}
+	default:
+		resp["error"] = "unknown method"
+		w.WriteHeader(http.StatusNotFound)
+		jsonStr, err := json.Marshal(resp)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			resp["error"] = "internal server error"
+			jsonStr, _ := json.Marshal(resp)
+			fmt.Fprintf(w, string(jsonStr))
+			return
+		}
+		fmt.Fprintf(w, string(jsonStr))
+		return
+	}
+}
