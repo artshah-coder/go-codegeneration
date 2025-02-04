@@ -27,9 +27,9 @@ Authorization is checked by verifying the `X-Auth` header contains the value `10
  
 The generated code will follow this structure:
  
-`ServeHTTP` - handles all methods via the multiplexer. If a method is found, it calls `handler$methodName`; otherwise, returns `404`.
-`handler$methodName` - wrapper around the struct method `$methodName`. Performs all checks, outputs errors or results in `JSON` format.
-`$methodName` - the actual struct method (prefixed with `apigen:api` followed by `json` metadata for method name, type, and auth requirement). Do not generate this — it already exists.
+- `ServeHTTP` - handles all methods via the multiplexer. If a method is found, it calls `handler$methodName`; otherwise, returns `404`
+- `handler$methodName` - wrapper around the struct method `$methodName`. Performs all checks, outputs errors or results in `JSON` format
+- `$methodName` - the actual struct method (prefixed with `apigen:api` followed by `json` metadata for method name, type, and auth requirement). Do not generate this — it already exists.
  
 Code generator structure:
 
